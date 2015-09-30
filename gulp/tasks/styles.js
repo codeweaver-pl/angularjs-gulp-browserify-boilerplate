@@ -11,22 +11,19 @@ var autoprefixer = require('gulp-autoprefixer');
 
 gulp.task('styles', function () {
 
-  var createSourcemap = !global.isProd || config.styles.prodSourcemap;
+  var createSourcemap = !global.release || config.styles.prodSourcemap;
 
   return gulp.src(config.styles.src)
     .pipe(gulpif(createSourcemap, sourcemaps.init()))
     .pipe(sass({
-      sourceComments: !global.isProd,
-      outputStyle: global.isProd ? 'compressed' : 'nested',
-      includePaths: config.styles.sassIncludePaths
+      sourceComments: !global.release,
+      outputStyle:    global.release ? 'compressed' : 'nested',
+      includePaths:   config.styles.sassIncludePaths
     }))
     .on('error', handleErrors)
     .pipe(autoprefixer('last 2 versions', '> 1%', 'ie 8'))
-    .pipe(gulpif(
-      createSourcemap,
-      sourcemaps.write( global.isProd ? './' : null ))
-    )
+    .pipe(gulpif(createSourcemap, sourcemaps.write(global.release ? './' : null)))
     .pipe(gulp.dest(config.styles.dest))
-    .pipe(browserSync.stream({ once: true }));
+    .pipe(browserSync.stream({once: true}));
 
 });

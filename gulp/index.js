@@ -1,9 +1,16 @@
 'use strict';
 
-var fs = require('fs');
-var onlyScripts = require('./util/scriptFilter');
-var tasks = fs.readdirSync('./gulp/tasks/').filter(onlyScripts);
+var path = require('path'),
+    fs   = require('fs');
 
-tasks.forEach(function(task) {
-  require('./tasks/' + task);
-});
+fs.readdirSync('./gulp/tasks/')
+  .filter(scriptsOnly)
+  .forEach(requireTask);
+
+function scriptsOnly(fileName) {
+  return /(\.(js)$)/i.test(path.extname(fileName));
+}
+
+function requireTask(taskName) {
+  require('./tasks/' + taskName);
+}

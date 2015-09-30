@@ -1,27 +1,32 @@
 'use strict';
 
-var notify = require('gulp-notify');
+var _      = require('lodash'),
+    notify = require('gulp-notify');
 
-module.exports = function(error) {
+module.exports = function (error) {
 
-  if( !global.isProd ) {
+  var emitEnd = _.bind(this, this.emit, 'end');
 
-    var args = Array.prototype.slice.call(arguments);
-
-    // Send error to notification center with gulp-notify
-    notify.onError({
-      title: 'Compile Error',
-      message: '<%= error.message %>'
-    }).apply(this, args);
-
-    // Keep gulp from hanging on this task
-    this.emit('end');
-
+  if (global.release) {
+    releaseErrorHandler();
   } else {
-    // Log the error and stop the process
-    // to prevent broken code from building
+    devErrorHandler();
+  }
+
+  function releaseErrorHandler() {
+    // Log the error and stop the process to prevent broken code from building
     console.log(error);
     process.exit(1);
   }
 
+  function devErrorHandler() {
+    // Send error to notification center with gulp-notify
+    notify.onError({
+      title:   'Compile Error',
+      message: '<%= error.message %>'
+    })(error);
+
+    // Keep gulp from hanging on this task
+    emitEnd();
+  }
 };

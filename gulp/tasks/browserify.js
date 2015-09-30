@@ -16,61 +16,65 @@ var handleErrors = require('../util/handleErrors');
 var browserSync  = require('browser-sync');
 var debowerify   = require('debowerify');
 var ngAnnotate   = require('browserify-ngannotate');
+var ngHtml2Js    = require("browserify-ng-html2js");
 
 // Based on: http://blog.avisi.nl/2014/04/25/how-to-keep-a-fast-build-with-browserify-and-reactjs/
-function buildScript(file) {
+gulp.task('browserify', function () {
 
-  var bundler = browserify({
-    entries: config.browserify.entries,
-    debug: true,
-    cache: {},
-    packageCache: {},
-    fullPaths: !global.isProd
-  });
-
-  if ( !global.isProd ) {
-    bundler = watchify(bundler);
-    bundler.on('update', function() {
-      rebundle();
+    /** @type Browserify */
+    var bundler = browserify({
+      entries:      config.browserify.entries,
+      debug:        true,
+      cache:        {},
+      packageCache: {},
+      fullPaths:    !global.release
     });
+
+    if (!global.release) {
+      bundler = watchify(bundler);
+      bundler.on('update', function () {
+        rebundle();
+      });
+    }
+
+    var transforms = [
+      {'name': babelify, 'options': {}},
+      {'name': debowerify, 'options': {}},
+      {'name': ngAnnotate, 'options': {}},
+      {
+        'name':      ngHtml2Js({
+          prefix:         '',
+          module:         'templates',
+          extension:      'tpl.html',
+          requireAngular: true
+        }), options: {}
+      },
+      {'name': 'brfs', 'options': {}},
+      {'name': 'bulkify', 'options': {}}
+    ];
+
+    transforms.forEach(function (transform) {
+      bundler.transform(transform.name);
+    });
+
+    function rebundle() {
+      var stream          = bundler.bundle();
+      var createSourcemap = global.release && config.browserify.prodSourcemap;
+
+      gutil.log('Rebundle...');
+
+      return stream.on('error', handleErrors)
+        .pipe(source('main.js'))
+        .pipe(gulpif(createSourcemap, buffer()))
+        .pipe(gulpif(createSourcemap, sourcemaps.init()))
+        .pipe(gulpif(global.release, streamify(uglify({
+          compress: {drop_console: true}
+        }))))
+        .pipe(gulpif(createSourcemap, sourcemaps.write('./')))
+        .pipe(gulp.dest(config.scripts.dest))
+        .pipe(browserSync.stream({once: true}));
+    }
+
+    return rebundle();
   }
-
-  var transforms = [
-    { 'name':babelify, 'options': {}},
-    { 'name':debowerify, 'options': {}},
-    { 'name':ngAnnotate, 'options': {}},
-    { 'name':'brfs', 'options': {}},
-    { 'name':'bulkify', 'options': {}}
-  ];
-
-  transforms.forEach(function(transform) {
-    bundler.transform(transform.name, transform.options);
-  });
-
-  function rebundle() {
-    var stream = bundler.bundle();
-    var createSourcemap = global.isProd && config.browserify.prodSourcemap;
-
-    gutil.log('Rebundle...');
-
-    return stream.on('error', handleErrors)
-      .pipe(source(file))
-      .pipe(gulpif(createSourcemap, buffer()))
-      .pipe(gulpif(createSourcemap, sourcemaps.init()))
-      .pipe(gulpif(global.isProd, streamify(uglify({
-        compress: { drop_console: true }
-      }))))
-      .pipe(gulpif(createSourcemap, sourcemaps.write('./')))
-      .pipe(gulp.dest(config.scripts.dest))
-      .pipe(browserSync.stream({ once: true }));
-  }
-
-  return rebundle();
-
-}
-
-gulp.task('browserify', function() {
-
-  return buildScript('main.js');
-
-});
+);
