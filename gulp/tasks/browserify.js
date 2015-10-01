@@ -10,11 +10,9 @@ var buffer       = require('vinyl-buffer');
 var streamify    = require('gulp-streamify');
 var watchify     = require('watchify');
 var browserify   = require('browserify');
-var babelify     = require('babelify');
 var uglify       = require('gulp-uglify');
 var handleErrors = require('../util/handleErrors');
 var browserSync  = require('browser-sync');
-var debowerify   = require('debowerify');
 var ngAnnotate   = require('browserify-ngannotate');
 var ngHtml2Js    = require("browserify-ng-html2js");
 
@@ -38,8 +36,6 @@ gulp.task('browserify', function () {
     }
 
     var transforms = [
-      {'name': babelify, 'options': {}},
-      {'name': debowerify, 'options': {}},
       {'name': ngAnnotate, 'options': {}},
       {
         'name':      ngHtml2Js({
