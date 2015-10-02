@@ -1,17 +1,15 @@
 'use strict';
 
-var istanbul = require('browserify-istanbul');
-var isparta  = require('isparta');
-
-var ngAnnotate = require('browserify-ngannotate');
-var ngHtml2Js = require("browserify-ng-html2js");
+var istanbul = require('browserify-istanbul'),
+    ngAnnotate = require('browserify-ngannotate'),
+ngHtml2Js = require("browserify-ng-html2js");
 
 module.exports = function(config) {
 
   config.set({
 
     basePath: '../',
-    frameworks: ['jasmine', 'browserify'],
+    frameworks: ['mocha', 'chai', 'browserify'],
     preprocessors: {
       'app/js/**/*.js': ['browserify', 'babel', 'coverage']
     },
@@ -27,7 +25,6 @@ module.exports = function(config) {
         ngHtml2Js,
         'bulkify',
         istanbul({
-          instrumenter: isparta,
           ignore: ['**/node_modules/**', '**/test/**']
         })
       ]

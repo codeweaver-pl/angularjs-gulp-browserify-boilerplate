@@ -16,14 +16,7 @@ exports.config = {
     platform: 'ANY'
   },
 
-  framework: 'jasmine',
-
-  jasmineNodeOpts: {
-    isVerbose: false,
-    showColors: true,
-    includeStackTrace: true,
-    defaultTimeoutInterval: 30000
-  },
+  framework: 'mocha',
 
   specs: [
     'e2e/**/*.js'
